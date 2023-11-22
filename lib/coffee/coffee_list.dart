@@ -23,7 +23,7 @@ class _CoffeeListState extends State<CoffeeList> {
   // Metode untuk membangun antarmuka pengguna
   @override
   Widget build(BuildContext context) {
-    // Menggunakan GridView untuk menampilkan daftar kopi dalam bentuk grid
+    // Mendapatkan lebar dan tinggi layar menggunakan MediaQuery
     double screenHeight = MediaQuery.of(context).size.height;
     double screenWidth = MediaQuery.of(context).size.width;
 
