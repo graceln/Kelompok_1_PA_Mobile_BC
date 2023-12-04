@@ -1,19 +1,19 @@
-// Import paket-paket yang diperlukan
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:pa_mobile/pages/cart_page.dart';
-import 'package:pa_mobile/pages/order_page.dart';
-import 'product_detail.dart';
-import 'settings_page.dart';
 
-// Kelas untuk merepresentasikan objek produk
+// Import halaman-halaman terkait
+import 'admin_order_page.dart';
+import 'product_option.dart';
+import '../admin_pages/setting_admin_page.dart';
+
+// Model untuk representasi produk
 class Product {
-  final String name;
-  final String description;
-  final double price;
-  final String imageUrl;
+  final String name; // Nama produk
+  final String description; // Deskripsi produk
+  final double price; // Harga produk
+  final String imageUrl; // URL gambar produk
 
   Product({
     required this.name,
@@ -25,15 +25,15 @@ class Product {
   // Konstruktor untuk mengonversi dokumen Firestore menjadi objek Product
   factory Product.fromMap(Map<String, dynamic> map) {
     return Product(
-      name: map['name'] ?? '',
-      description: map['description'] ?? '',
-      price: (map['price'] ?? 0).toDouble(),
-      imageUrl: map['imageUrl'] ?? '',
+      name: map['name'],
+      description: map['description'],
+      price: (map['price'] as num).toDouble(),
+      imageUrl: map['imageUrl'],
     );
   }
 }
 
-class HomePage extends StatelessWidget {
+class AdminHomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -45,27 +45,27 @@ class HomePage extends StatelessWidget {
               style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
             Spacer(), // Menambahkan spacer agar tombol My Cart berada di sebelah kanan
-            ElevatedButton(
-              onPressed: () {
-                // Dapatkan UserID saat aplikasi dimulai
-                User? user = FirebaseAuth.instance.currentUser;
-                if (user != null) {
-                  String userId = user.uid;
-                  print('UserID: $userId');
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => CartPage(
-                        userId: userId,
-                      ),
-                    ),
-                  );
-                } else {
-                  print('Pengguna belum login');
-                }
-              },
-              child: Text("My Cart"),
-            ),
+            // ElevatedButton(
+            //   onPressed: () {
+            //     // Dapatkan UserID saat aplikasi dimulai
+            //     User? user = FirebaseAuth.instance.currentUser;
+            //     if (user != null) {
+            //       String userId = user.uid;
+            //       print('UserID: $userId');
+            //       Navigator.push(
+            //         context,
+            //         MaterialPageRoute(
+            //           builder: (context) => CartPage(
+            //             userId: userId,
+            //           ),
+            //         ),
+            //       );
+            //     } else {
+            //       print('Pengguna belum login');
+            //     }
+            //   },
+            //   child: Text("My Cart"),
+            // ),
           ],
         ),
         automaticallyImplyLeading: false,
@@ -119,15 +119,15 @@ class CoffeeItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () {
-        // Navigasi ke ProductDetailPage saat produk ditekan
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => ProductDetailPage(product: product),
-          ),
-        );
-      },
+      // onTap: () {
+      //   // Navigasi ke ProductDetailPage saat produk ditekan
+      //   Navigator.push(
+      //     context,
+      //     MaterialPageRoute(
+      //       builder: (context) => ProductDetailPage(product: product),
+      //     ),
+      //   );
+      // },
       child: Card(
         // Mengganti Container dengan Card
         shape: RoundedRectangleBorder(
@@ -172,7 +172,7 @@ class CoffeeItem extends StatelessWidget {
   }
 }
 
-// Fungsi untuk mengambil data produk dari Firestore
+// Metode untuk mengambil data produk dari Firestore
 Stream<List<Product>> getProductList() {
   return FirebaseFirestore.instance.collection('products').snapshots().map(
     (snapshot) {
@@ -183,19 +183,19 @@ Stream<List<Product>> getProductList() {
   );
 }
 
-// Kelas untuk menangani bottom navigation bar
-class UserBottomNav extends StatefulWidget {
+class AdminBottomNav extends StatefulWidget {
   @override
-  _UserBottomNavState createState() => _UserBottomNavState();
+  _AdminBottomNavState createState() => _AdminBottomNavState();
 }
 
-// State dari UserBottomNav
-class _UserBottomNavState extends State<UserBottomNav> {
+class _AdminBottomNavState extends State<AdminBottomNav> {
   int _currentIndex = 0;
+  int _savedIndex = 0;
   final List<Widget> _children = [
-    HomePage(), // Home Page    
-    OrderPage(), // Order Page
-    SettingsPage(), // Settings Page
+    AdminHomePage(), // Home Page
+    OrderPageAdmin(), // Favorite Page
+    ProductOptionPage(), //Input Page
+    AdminSettingsPage(), // Settings Page
   ];
 
   void onTabTapped(int index) {
@@ -210,24 +210,32 @@ class _UserBottomNavState extends State<UserBottomNav> {
       body: _children[_currentIndex],
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex, // index halaman
-        onTap: onTabTapped, // reaksi ketika tab ditekan
+        onTap: (index) {
+          setState(() {
+            _savedIndex = _currentIndex; // Simpan indeks saat ini sebelum berpindah
+            onTabTapped(index);
+          });
+        },
         items: [
-          // Item yang ditampilkan pada bottom navigation
           BottomNavigationBarItem(
             icon: Icon(Icons.home), // Icon untuk navigation Home
             label: 'Home', // Nama navigation
-          ),          
+          ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.history), // Icon untuk navigation Product
+            icon: Icon(
+                Icons.shopping_cart_rounded), // Icon untuk navigation Product
             label: 'Order', // Nama navigation
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.edit_document), // Icon untuk navigation Product
+            label: 'Data', // Nama navigation
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.settings), // Icon untuk navigation Settings
             label: 'Settings', // nama navigation
           ),
         ],
-        backgroundColor:
-            Colors.grey[900], // Warna background bottom navigation bar
+        backgroundColor: Colors.grey[900], // Warna background bottom navigation bar
         selectedItemColor: Color(0xFFE57734), // Warna ikon yang dipilih
         unselectedItemColor: Colors.grey, // Warna ikon yang belum dipilih
       ),
