@@ -5,6 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:pa_mobile/pages/cart_page.dart';
 import 'package:pa_mobile/pages/order_page.dart';
+import 'package:pa_mobile/theme/theme_mode_data.dart';
+import 'package:pa_mobile/theme/theme_provider.dart';
+import 'package:provider/provider.dart';
 import 'product_detail.dart';
 import 'settings_page.dart';
 
@@ -36,6 +39,8 @@ class Product {
 class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+
     return Scaffold(
       appBar: AppBar(
         title: Row(
@@ -44,25 +49,34 @@ class HomePage extends StatelessWidget {
               'Find Your Best Coffee',
               style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
-            Spacer(), // Menambahkan spacer agar tombol My Cart berada di sebelah kanan
-            ElevatedButton(
-              onPressed: () {
-                // Dapatkan UserID saat aplikasi dimulai
-                User? user = FirebaseAuth.instance.currentUser;
-                if (user != null) {
-                  String userId = user.uid;
-                  print('UserID: $userId');
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => CartPage(
-                        userId: userId,
+            Spacer(),
+            Builder(
+              builder: (context) {
+                return PopupMenuButton(
+                  itemBuilder: (context) => [
+                    PopupMenuItem(
+                      child: ListTile(
+                        leading: Icon(
+                          themeProvider.isDarkMode
+                              ? Icons.dark_mode
+                              : Icons.light_mode,
+                        ),
+                        title: Text("Dark Mode"),
+                        trailing: Switch(
+                          value: themeProvider.isDarkMode,
+                          onChanged: (bool value) {
+                            themeProvider.toggleTheme();
+                          },
+                        ),
                       ),
                     ),
-                  );
-                } else {
-                  print('Pengguna belum login');
-                }
+                  ],
+                );
+              },
+            ),
+            ElevatedButton(
+              onPressed: () {
+                // Your existing logic for My Cart button
               },
               child: Text("My Cart"),
             ),
