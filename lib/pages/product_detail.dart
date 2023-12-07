@@ -3,7 +3,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-
 import 'home_page.dart';
 
 // Kelas untuk halaman detail produk
@@ -24,6 +23,70 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
   bool lessSugarValue = false;
   int quantity = 1; // Kuantitas pesanan
   double subTotalHarga = 0; // Total harga berdasarkan kuantitas
+  bool isFavorite = false;
+
+  late User? currentUser; // Tambahkan variabel currentUser
+
+  @override
+  void initState() {
+    super.initState();
+    // Ambil instance pengguna saat ini saat objek dibuat
+    currentUser = FirebaseAuth.instance.currentUser;
+    checkFavoriteStatus();
+  }
+
+  // Fungsi untuk memeriksa apakah produk sudah ada di daftar favorit
+  void checkFavoriteStatus() async {
+    if (currentUser != null) {
+      String userId = currentUser!.uid;
+      bool favoriteStatus =
+          await checkIfFavorite(userId, widget.product.productId);
+      setState(() {
+        isFavorite = favoriteStatus;
+      });
+    }
+  }
+
+  // Fungsi untuk memperbarui status favorit dan menampilkan snackbar
+  Future<void> updateFavoriteStatus() async {
+    if (currentUser != null) {
+      String userId = currentUser!.uid;
+      bool favoriteStatus =
+          await checkIfFavorite(userId, widget.product.productId);
+
+      setState(() {
+        isFavorite = favoriteStatus;
+      });
+
+      showSnackbar(
+          isFavorite ? 'Ditambahkan ke Favorit' : 'Dihapus dari Favorit');
+    }
+  }
+
+  // void _toggleFavorite() {
+  //   setState(() {
+  //     isFavorite = !isFavorite;
+  //   });
+
+  //   // Pastikan currentUser tidak null sebelum mengambil UID
+  //   if (currentUser != null) {
+  //     String userId = currentUser!.uid;
+
+  //     // Panggil metode untuk menambah atau menghapus dari daftar favorit
+  //     if (isFavorite) {
+  //       FirestoreService().addToFavorites(userId, widget.product.id);
+  //     } else {
+  //       FirestoreService().removeFromFavorites(userId, widget.product.id);
+  //     }
+
+  //     // Tampilkan snackbar atau lakukan tindakan lain sesuai kebutuhan
+  //     showSnackbar(
+  //         isFavorite ? 'Ditambahkan ke Favorit' : 'Dihapus dari Favorit');
+  //   } else {
+  //     // Handle jika currentUser null (mungkin pengguna belum login)
+  //     showSnackbar('Pengguna belum login');
+  //   }
+  // }
 
   // Fungsi untuk menampilkan snackbar
   void showSnackbar(String message) {
@@ -229,61 +292,145 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                 ],
               ),
               SizedBox(height: 30),
-              ElevatedButton(
-                onPressed: () {
-                  // Fungsi untuk menyimpan data pemesanan ke Firestore
-                  void placeOrder() async {
-                    // Ambil informasi pengguna yang sedang login
-                    User? user = FirebaseAuth.instance.currentUser;
-                    if (user != null) {
-                      String userId = user.uid;
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      // Fungsi untuk menyimpan data favorit ke Firestore
+                      void addToFavorite() async {
+                        if (currentUser != null) {
+                          String userId = currentUser!.uid;
 
-                      // Persiapkan data pemesanan
-                      Map<String, dynamic> cartData = {
-                        'productName': widget.product.name,
-                        'cupSize': cupSizeValue,
-                        'hotCold': hotColdValue,
-                        'lessIce': lessIceValue,
-                        'lessSugar': lessSugarValue,
-                        'quantity': quantity,
-                        'subTotalPrice': subTotalHarga,
-                        // tambahkan data pesanan lainnya sesuai kebutuhan
-                      };
+                          // Periksa apakah produk sudah ada di daftar favorit
+                          bool alreadyFavorite = await checkIfFavorite(
+                              userId, widget.product.productId);
 
-                      // Simpan data pemesanan ke dalam koleksi orderHistory
-                      await FirebaseFirestore.instance
-                          .collection('users')
-                          .doc(userId)
-                          .collection('cart')
-                          .add(cartData)
-                          .then((_) {
-                        // Tampilkan snackbar jika berhasil menambahkan ke keranjang
-                        showSnackbar('Berhasil menambahkan ke keranjang');
-                      }).catchError((error) {
-                        // Tampilkan snackbar jika terjadi error
-                        showSnackbar('Error: $error');
-                      });
-                    } else {
-                      // Pengguna tidak login, beri tanggapan atau arahkan ke halaman login
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Silakan login terlebih dahulu.'),
-                        ),
-                      );
-                      // Tambahkan navigasi ke halaman login jika diperlukan
-                      // Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => LoginPage()));
-                    }
-                  }
+                          if (alreadyFavorite) {
+                            // Produk sudah ada di daftar favorit, lakukan aksi hapus favorit
+                            await removeFromFavorite(
+                                userId, widget.product.productId);
+                          } else {
+                            // Produk belum ada di daftar favorit, lakukan aksi tambah favorit
+                            await addToFavorites(
+                                userId, widget.product.productId);
+                          }
 
-                  // Panggil fungsi untuk menyimpan data pemesanan
-                  placeOrder();
-                },
-                child: Text('Add to Cart'),
+                          // Perbarui status favorit dan tampilkan snackbar
+                          await updateFavoriteStatus();
+                        } else {
+                          // Pengguna tidak login, beri tanggapan atau arahkan ke halaman login
+                          showSnackbar('Silakan login terlebih dahulu.');
+                        }
+                      }
+
+                      // Panggil fungsi untuk menyimpan data favorit
+                      addToFavorite();
+                    },
+                    icon: Icon(
+                      isFavorite ? Icons.favorite : Icons.favorite_outline,
+                      color: isFavorite
+                          ? Colors.red
+                          : null, // Warna ikon terisi jika sudah favorit
+                    ),
+                    label: Text(
+                      isFavorite ? 'Remove from Favorite' : 'Add to Favorite',
+                    ),
+                  ),
+                  ElevatedButton(
+                    onPressed: () {
+                      // Fungsi untuk menyimpan data pemesanan ke Firestore
+                      void placeOrder() async {
+                        // Ambil informasi pengguna yang sedang login
+                        User? user = FirebaseAuth.instance.currentUser;
+                        if (user != null) {
+                          String userId = user.uid;
+
+                          // Persiapkan data pemesanan
+                          Map<String, dynamic> cartData = {
+                            'productName': widget.product.name,
+                            'cupSize': cupSizeValue,
+                            'hotCold': hotColdValue,
+                            'lessIce': lessIceValue,
+                            'lessSugar': lessSugarValue,
+                            'quantity': quantity,
+                            'subTotalPrice': subTotalHarga,
+                            // tambahkan data pesanan lainnya sesuai kebutuhan
+                          };
+
+                          // Simpan data pemesanan ke dalam koleksi orderHistory
+                          await FirebaseFirestore.instance
+                              .collection('users')
+                              .doc(userId)
+                              .collection('cart')
+                              .add(cartData)
+                              .then((_) {
+                            // Tampilkan snackbar jika berhasil menambahkan ke keranjang
+                            showSnackbar('Berhasil menambahkan ke keranjang');
+                          }).catchError((error) {
+                            // Tampilkan snackbar jika terjadi error
+                            showSnackbar('Error: $error');
+                          });
+                        } else {
+                          // Pengguna tidak login, beri tanggapan atau arahkan ke halaman login
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Silakan login terlebih dahulu.'),
+                            ),
+                          );
+                          // Tambahkan navigasi ke halaman login jika diperlukan
+                          // Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => LoginPage()));
+                        }
+                      }
+
+                      // Panggil fungsi untuk menyimpan data pemesanan
+                      placeOrder();
+                    },
+                    child: Text('Add to Cart'),
+                  ),
+                ],
               ),
             ],
           ),
         ),
       ),
     );
+  }
+
+  Future<bool> checkIfFavorite(String userId, String productId) async {
+    DocumentSnapshot favoriteDoc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(userId)
+        .collection('favorite')
+        .doc(productId)
+        .get();
+
+    return favoriteDoc.exists;
+  }
+
+  Future<void> addToFavorites(String userId, String productId) async {
+    Map<String, dynamic> favoriteData = {
+      'productId': widget.product.productId,
+      'name': widget.product.name,
+      'description': widget.product.description,
+      'price': widget.product.price,
+      'imageUrl': widget.product.imageUrl,
+    };
+
+    await FirebaseFirestore.instance
+        .collection('users')
+        .doc(userId)
+        .collection('favorite')
+        .doc(productId)
+        .set(favoriteData);
+  }
+
+  Future<void> removeFromFavorite(String userId, String productId) async {
+    await FirebaseFirestore.instance
+        .collection('users')
+        .doc(userId)
+        .collection('favorite')
+        .doc(productId)
+        .delete();
   }
 }

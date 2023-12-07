@@ -127,15 +127,15 @@ class _AdminSettingsPageState extends State<AdminSettingsPage> {
               _logout(context);
             },
           ),
-          // ListTile(
-          //     leading: const Icon(Icons.dark_mode),
-          //     title: const Text('Dark Mode'),
-          //     trailing: Switch(
-          //       value: themeProvider.isDarkMode,
-          //       onChanged: (value) {
-          //         themeProvider.toggleDarkMode();
-          //       },
-          //     )),
+          ListTile(
+              leading: const Icon(Icons.dark_mode),
+              title: const Text('Dark Mode'),
+              trailing: Switch(
+                value: themeProvider.isDarkMode,
+                onChanged: (value) {
+                  themeProvider.toggleDarkMode();
+                },
+              )),
         ],
       ),
     );

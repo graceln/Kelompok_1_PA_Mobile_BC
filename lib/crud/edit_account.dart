@@ -41,7 +41,6 @@ class _AccountEditPageState extends State<AccountEditPage> {
     });
   }
 
-  
   // Metode untuk memilih gambar dari galeri
   Future<void> _getImage() async {
     final picker = ImagePicker();
@@ -66,61 +65,60 @@ class _AccountEditPageState extends State<AccountEditPage> {
 
   // Metode untuk menyimpan perubahan pada profil
   void _saveChanges(BuildContext context) async {
-  User? user = FirebaseAuth.instance.currentUser;
+    User? user = FirebaseAuth.instance.currentUser;
 
-  // Ambil URL gambar profil yang tersimpan di Firestore
-  DocumentSnapshot<Map<String, dynamic>> userData = await FirebaseFirestore
-      .instance
-      .collection('users')
-      .doc(user?.uid)
-      .get();
+    // Ambil URL gambar profil yang tersimpan di Firestore
+    DocumentSnapshot<Map<String, dynamic>> userData = await FirebaseFirestore
+        .instance
+        .collection('users')
+        .doc(user?.uid)
+        .get();
 
-  String storedImageUrl = userData.data()?['profileImageUrl'] ?? '';
+    String storedImageUrl = userData.data()?['profileImageUrl'] ?? '';
 
-  try {
-    // Cek apakah gambar profil telah berubah
-    bool isImageChanged = _image != null && _image!.path != storedImageUrl;
+    try {
+      // Cek apakah gambar profil telah berubah
+      bool isImageChanged = _image != null && _image!.path != storedImageUrl;
 
-    // Update data pengguna di Firestore hanya jika ada perubahan pada gambar
-    if (isImageChanged) {
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user?.uid)
-          .update({
-        'name': _nameController.text,
-        'address': _addressController.text,
-        'profileImageUrl': await _uploadImage(),
-        // Tambahkan atribut lainnya sesuai kebutuhan
-      });
-    } else {
-      // Jika tidak ada perubahan pada gambar, hanya update data pengguna lainnya
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user?.uid)
-          .update({
-        'name': _nameController.text,
-        'address': _addressController.text,
-        // Tambahkan atribut lainnya sesuai kebutuhan
-      });
+      // Update data pengguna di Firestore hanya jika ada perubahan pada gambar
+      if (isImageChanged) {
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user?.uid)
+            .update({
+          'name': _nameController.text,
+          'address': _addressController.text,
+          'profileImageUrl': await _uploadImage(),
+          // Tambahkan atribut lainnya sesuai kebutuhan
+        });
+      } else {
+        // Jika tidak ada perubahan pada gambar, hanya update data pengguna lainnya
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user?.uid)
+            .update({
+          'name': _nameController.text,
+          'address': _addressController.text,
+          // Tambahkan atribut lainnya sesuai kebutuhan
+        });
+      }
+
+      // Tampilkan notifikasi bahwa perubahan telah disimpan
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Data berhasil disimpan!'),
+        ),
+      );
+    } catch (e) {
+      print('Error saving changes: $e');
+      // Tampilkan notifikasi bahwa terjadi kesalahan
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Gagal menyimpan data. Silahkan coba lagi.'),
+        ),
+      );
     }
-
-    // Tampilkan notifikasi bahwa perubahan telah disimpan
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Data berhasil disimpan!'),
-      ),
-    );
-  } catch (e) {
-    print('Error saving changes: $e');
-    // Tampilkan notifikasi bahwa terjadi kesalahan
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Gagal menyimpan data. Silahkan coba lagi.'),
-      ),
-    );
   }
-}
-
 
   @override
   Widget build(BuildContext context) {
@@ -132,8 +130,7 @@ class _AccountEditPageState extends State<AccountEditPage> {
         padding: const EdgeInsets.all(16.0),
         child: Form(
           key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          child: Column(            
             children: [
               GestureDetector(
                 onTap: () {
@@ -154,7 +151,10 @@ class _AccountEditPageState extends State<AccountEditPage> {
               SizedBox(height: 20),
               TextFormField(
                 controller: _nameController,
-                decoration: InputDecoration(labelText: 'Full Name'),
+                decoration: InputDecoration(
+                  border: OutlineInputBorder(),
+                  hintText: 'Full Name',
+                ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter your full name';
@@ -162,9 +162,13 @@ class _AccountEditPageState extends State<AccountEditPage> {
                   return null;
                 },
               ),
+              SizedBox(height: 20),
               TextFormField(
                 controller: _addressController,
-                decoration: InputDecoration(labelText: 'Address'),
+                decoration: InputDecoration(
+                  border: OutlineInputBorder(),
+                  hintText: 'Address',
+                ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter your address';

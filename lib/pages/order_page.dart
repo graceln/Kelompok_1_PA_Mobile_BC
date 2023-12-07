@@ -28,6 +28,9 @@ class OrderStatusColor extends StatelessWidget {
       case 'complete':
         textColor = Colors.green;
         break;
+      case 'canceled':
+        textColor = Colors.red;
+        break;
       default:
         textColor = Colors.black;
         break;

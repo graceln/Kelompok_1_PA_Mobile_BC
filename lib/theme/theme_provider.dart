@@ -5,8 +5,9 @@ class ThemeProvider with ChangeNotifier {
 
   bool get isDarkMode => _isDarkMode;
 
-  void toggleTheme() {
+  void toggleDarkMode() {
     _isDarkMode = !_isDarkMode;
+    // Selanjutnya, simpan _isDarkMode ke Shared Preferences atau storage lainnya
     notifyListeners();
   }
 }

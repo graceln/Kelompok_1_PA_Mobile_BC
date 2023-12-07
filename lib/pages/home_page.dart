@@ -5,33 +5,49 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:pa_mobile/pages/cart_page.dart';
 import 'package:pa_mobile/pages/order_page.dart';
-import 'package:pa_mobile/theme/theme_mode_data.dart';
-import 'package:pa_mobile/theme/theme_provider.dart';
-import 'package:provider/provider.dart';
+import 'favorite_page.dart';
 import 'product_detail.dart';
 import 'settings_page.dart';
 
 // Kelas untuk merepresentasikan objek produk
 class Product {
+  final String productId;
   final String name;
   final String description;
   final double price;
   final String imageUrl;
 
   Product({
+    required this.productId,
     required this.name,
     required this.description,
     required this.price,
     required this.imageUrl,
   });
 
-  // Konstruktor untuk mengonversi dokumen Firestore menjadi objek Product
   factory Product.fromMap(Map<String, dynamic> map) {
     return Product(
+      productId: map['productId'] ?? '',
       name: map['name'] ?? '',
       description: map['description'] ?? '',
       price: (map['price'] ?? 0).toDouble(),
       imageUrl: map['imageUrl'] ?? '',
+    );
+  }
+
+  Product copyWith({
+    String? productId,
+    String? name,
+    String? description,
+    double? price,
+    String? imageUrl,
+  }) {
+    return Product(
+      productId: productId ?? this.productId,
+      name: name ?? this.name,
+      description: description ?? this.description,
+      price: price ?? this.price,
+      imageUrl: imageUrl ?? this.imageUrl,
     );
   }
 }
@@ -39,59 +55,75 @@ class Product {
 class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final themeProvider = Provider.of<ThemeProvider>(context);
-
     return Scaffold(
       appBar: AppBar(
-        title: Row(
-          children: [
-            Text(
-              'Find Your Best Coffee',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-            Spacer(),
-            Builder(
-              builder: (context) {
-                return PopupMenuButton(
-                  itemBuilder: (context) => [
-                    PopupMenuItem(
-                      child: ListTile(
-                        leading: Icon(
-                          themeProvider.isDarkMode
-                              ? Icons.dark_mode
-                              : Icons.light_mode,
-                        ),
-                        title: Text("Dark Mode"),
-                        trailing: Switch(
-                          value: themeProvider.isDarkMode,
-                          onChanged: (bool value) {
-                            themeProvider.toggleTheme();
-                          },
-                        ),
-                      ),
-                    ),
-                  ],
-                );
-              },
-            ),
-            ElevatedButton(
-              onPressed: () {
-                // Your existing logic for My Cart button
-              },
-              child: Text("My Cart"),
-            ),
-          ],
+        title: Text(
+          'Find Your Best Coffee',
+          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
         ),
         automaticallyImplyLeading: false,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: CoffeeList(),
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SizedBox(height: 8.0),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              ElevatedButton(
+                onPressed: () {
+                  // Dapatkan UserID saat aplikasi dimulai
+                  User? user = FirebaseAuth.instance.currentUser;
+                  if (user != null) {
+                    String userId = user.uid;
+                    print('UserID: $userId');
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => CartPage(
+                          userId: userId,
+                        ),
+                      ),
+                    );
+                  } else {
+                    print('Pengguna belum login');
+                  }
+                },
+                child: Text("My Cart"),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  // Dapatkan UserID saat aplikasi dimulai
+                  User? user = FirebaseAuth.instance.currentUser;
+                  if (user != null) {
+                    String userId = user.uid;
+                    print('UserID: $userId');
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => FavoriteProductsPage(),
+                      ),
+                    );
+                  } else {
+                    print('Pengguna belum login');
+                  }
+                },
+                child: Text("My Favorite"),
+              ),
+            ],
+          ),
+          SizedBox(height: 8.0),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: CoffeeList(),
+            ),
+          ),
+        ],
       ),
     );
   }
 }
-
 
 
 // Kelas untuk menampilkan daftar produk dalam bentuk GridView
@@ -186,12 +218,13 @@ class CoffeeItem extends StatelessWidget {
   }
 }
 
-// Fungsi untuk mengambil data produk dari Firestore
+// Pada fungsi untuk mendapatkan data produk dari Firestore, pastikan productId terisi
 Stream<List<Product>> getProductList() {
   return FirebaseFirestore.instance.collection('products').snapshots().map(
     (snapshot) {
       return snapshot.docs
-          .map((doc) => Product.fromMap(doc.data() as Map<String, dynamic>))
+          .map((doc) => Product.fromMap(doc.data() as Map<String, dynamic>)
+              .copyWith(productId: doc.id)) // Tambahkan baris ini
           .toList();
     },
   );
@@ -205,9 +238,10 @@ class UserBottomNav extends StatefulWidget {
 
 // State dari UserBottomNav
 class _UserBottomNavState extends State<UserBottomNav> {
+  User? user = FirebaseAuth.instance.currentUser;
   int _currentIndex = 0;
   final List<Widget> _children = [
-    HomePage(), // Home Page    
+    HomePage(), // Home Page
     OrderPage(), // Order Page
     SettingsPage(), // Settings Page
   ];
@@ -230,7 +264,7 @@ class _UserBottomNavState extends State<UserBottomNav> {
           BottomNavigationBarItem(
             icon: Icon(Icons.home), // Icon untuk navigation Home
             label: 'Home', // Nama navigation
-          ),          
+          ),
           BottomNavigationBarItem(
             icon: Icon(Icons.history), // Icon untuk navigation Product
             label: 'Order', // Nama navigation

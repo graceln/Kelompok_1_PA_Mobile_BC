@@ -38,6 +38,7 @@ dependencies:
   firebase_ui_firestore: ^1.5.14
   flutter:
     sdk: flutter
+  flutter_launcher_icons: ^0.13.1
   google_fonts: ^6.1.0
   image_picker: ^1.0.4
   intl: ^0.18.1
@@ -48,6 +49,11 @@ dev_dependencies:
   flutter_lints: ^2.0.0
   flutter_test:
     sdk: flutter
+
+flutter_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "images/logocafe.png"
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

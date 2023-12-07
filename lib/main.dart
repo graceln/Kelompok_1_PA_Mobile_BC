@@ -3,15 +3,13 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:pa_mobile/admin_pages/admin_home_page.dart';
-import 'package:pa_mobile/auth_services.dart';
 import 'package:pa_mobile/pages/home_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-// import 'auth/auth_services.dart';
+import 'auth/auth_services.dart';
 import 'firebase_options.dart';
 import 'pages/introduction_page.dart';
 import 'theme/theme_provider.dart';
 import 'package:provider/provider.dart';
-
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

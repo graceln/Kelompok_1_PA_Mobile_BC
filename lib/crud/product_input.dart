@@ -65,50 +65,50 @@ class _ProductInputPageState extends State<ProductInputPage> {
   }
 
   Future<void> _addProduct() async {
-  try {
-    String imageUrl = await _uploadImage();
+    try {
+      String imageUrl = await _uploadImage();
 
-    // Buat objek Product
-    Product newProduct = Product(
-      name: _nameController.text,
-      description: _descriptionController.text,
-      price: double.parse(_priceController.text),
-      imageUrl: imageUrl,
-    );
+      // Buat objek Product
+      Product newProduct = Product(
+        name: _nameController.text,
+        description: _descriptionController.text,
+        price: double.parse(_priceController.text),
+        imageUrl: imageUrl,
+      );
 
-    // Simpan ke Firestore
-    await FirebaseFirestore.instance.collection('products').add({
-      'name': newProduct.name,
-      'description': newProduct.description,
-      'price': newProduct.price,
-      'imageUrl': newProduct.imageUrl,
-    });
+      // Simpan ke Firestore
+      await FirebaseFirestore.instance.collection('products').add({
+        'name': newProduct.name,
+        'description': newProduct.description,
+        'price': newProduct.price,
+        'imageUrl': newProduct.imageUrl,
+      });
 
-    // Tampilkan pemberitahuan berhasil
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Product added successfully!'),
-        backgroundColor: Colors.green,
-      ),
-    );
+      // Tampilkan pemberitahuan berhasil
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Product added successfully!'),
+          backgroundColor: Colors.green,
+        ),
+      );
 
-    // Kosongkan kembali field
-    setState(() {
-      _nameController.clear();
-      _descriptionController.clear();
-      _priceController.clear();
-      _image = null;
-    });
-  } catch (error) {
-    // Tangani error dan tampilkan pemberitahuan error
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Error adding product: $error'),
-        backgroundColor: Colors.red,
-      ),
-    );
+      // Kosongkan kembali field
+      setState(() {
+        _nameController.clear();
+        _descriptionController.clear();
+        _priceController.clear();
+        _image = null;
+      });
+    } catch (error) {
+      // Tangani error dan tampilkan pemberitahuan error
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error adding product: $error'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
-}
 
   @override
   Widget build(BuildContext context) {
@@ -120,8 +120,7 @@ class _ProductInputPageState extends State<ProductInputPage> {
         padding: const EdgeInsets.all(16.0),
         child: Form(
           key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          child: Column(            
             children: [
               GestureDetector(
                 onTap: () {
@@ -142,7 +141,10 @@ class _ProductInputPageState extends State<ProductInputPage> {
               SizedBox(height: 20),
               TextFormField(
                 controller: _nameController,
-                decoration: InputDecoration(labelText: 'Product Name'),
+                decoration: InputDecoration(
+                  border: OutlineInputBorder(),
+                  hintText: 'Product Name',
+                ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter product name';
@@ -150,9 +152,13 @@ class _ProductInputPageState extends State<ProductInputPage> {
                   return null;
                 },
               ),
+              SizedBox(height: 20),
               TextFormField(
                 controller: _descriptionController,
-                decoration: InputDecoration(labelText: 'Description'),
+                decoration: InputDecoration(
+                  border: OutlineInputBorder(),
+                  hintText: 'Product Description',
+                ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter product description';
@@ -160,10 +166,14 @@ class _ProductInputPageState extends State<ProductInputPage> {
                   return null;
                 },
               ),
+              SizedBox(height: 20),
               TextFormField(
                 controller: _priceController,
                 keyboardType: TextInputType.number,
-                decoration: InputDecoration(labelText: 'Price'),
+                decoration: InputDecoration(
+                  border: OutlineInputBorder(),
+                  hintText: 'Product Price',
+                ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter product price';

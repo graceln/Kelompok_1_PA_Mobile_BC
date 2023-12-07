@@ -89,7 +89,8 @@ class _CartPageState extends State<CartPage> {
                             Text('Less Ice: ${lessIce ? 'Yes' : 'No'}'),
                             Text('Less Sugar: ${lessSugar ? 'Yes' : 'No'}'),
                             Text('Quantity: $quantity'),
-                            Text('Rp ${NumberFormat.currency(locale: 'id_ID', symbol: '', decimalDigits: 0).format(subTotalPrice)}'),
+                            Text(
+                                'Rp ${NumberFormat.currency(locale: 'id_ID', symbol: '', decimalDigits: 0).format(subTotalPrice)}'),
                           ],
                         ),
                         trailing: IconButton(
@@ -170,48 +171,69 @@ class _CartPageState extends State<CartPage> {
   }
 
   // Fungsi untuk menempatkan pesanan
-  void _placeOrder(
-      List<Map<String, dynamic>> selectedProducts, double totalHarga) async {
-    // Mendapatkan user ID
-    User? user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      String userId = user.uid;
+  void _placeOrder(List<Map<String, dynamic>> selectedProducts, double totalHarga) async {
+  User? user = FirebaseAuth.instance.currentUser;
 
-      try {
-        // Simpan data produk yang dipilih ke orderHistory
-        await FirebaseFirestore.instance
-            .collection('users')
-            .doc(userId)
-            .collection('orderHistory')
-            .add({
-          'products': selectedProducts,
-          'totalHarga': totalHarga,
-          'orderDate': DateTime.now(),
-          'orderStatus': 'On Queue',
-        });
+  if (user != null) {
+    String userId = user.uid;
+    String orderId = generateOrderId(); // Fungsi untuk menghasilkan orderId yang unik
 
-        // Hapus semua produk dari cart
-        await _clearCart(userId);
+    try {
+      // Ambil nama pengguna dari koleksi /users
+      DocumentSnapshot userDoc = await FirebaseFirestore.instance.collection('users').doc(userId).get();
+      String userName = userDoc['name'];
 
-        // Tampilkan snackbar sukses
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Pesanan berhasil ditempatkan!'),
-            duration: Duration(seconds: 2),
-          ),
-        );
-      } catch (error) {
-        // Tampilkan snackbar gagal jika terjadi kesalahan
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Gagal menempatkan pesanan. Silakan coba lagi.'),
-            duration: Duration(seconds: 2),
-          ),
-        );
-        print('Error placing order: $error');
-      }
+      // Simpan data produk yang dipilih ke koleksi order
+      await FirebaseFirestore.instance.collection('order').doc(orderId).set({
+        'userId': userId,
+        'userName': userName,
+        'products': selectedProducts,
+        'totalHarga': totalHarga,
+        'orderDate': DateTime.now(),
+        'orderStatus': 'On Queue',
+      });
+
+      // Simpan data produk yang dipilih ke koleksi /users/userid/orderHistory
+      await FirebaseFirestore.instance.collection('users').doc(userId).collection('orderHistory').doc(orderId).set({
+        'products': selectedProducts,
+        'totalHarga': totalHarga,
+        'orderDate': DateTime.now(),
+        'orderStatus': 'On Queue',
+      });
+
+      // Hapus semua produk dari cart
+      await _clearCart(userId);
+
+      // Tampilkan snackbar sukses
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Pesanan berhasil! Silakan cek halaman order secara berkala'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    } catch (error) {
+      // Tampilkan snackbar gagal jika terjadi kesalahan
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Gagal membuat pesanan. Silakan coba lagi.'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+      print('Error placing order: $error');
     }
   }
+}
+
+// Fungsi untuk menghasilkan orderId yang unik
+String generateOrderId() {
+  // Implementasi fungsi ini tergantung pada kebutuhan aplikasi Anda
+  // Anda dapat menggunakan timestamp, random number, atau kombinasi keduanya
+  // Contoh sederhana: return 'ORDER-${DateTime.now().millisecondsSinceEpoch}';
+  return 'ORDER-${DateTime.now().millisecondsSinceEpoch}';
+}
+
+
+
 
   // Fungsi untuk menghapus semua produk dari cart
   Future<void> _clearCart(String userId) async {

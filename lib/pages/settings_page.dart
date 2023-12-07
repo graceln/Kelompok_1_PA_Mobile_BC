@@ -99,21 +99,7 @@ class SettingsPage extends StatelessWidget {
                 MaterialPageRoute(builder: (context) => AccountEditPage()),
               );
             },
-          ),
-          // ListTile(
-          //   leading: Icon(Icons.language),
-          //   title: Text('Language'),
-          //   onTap: () {
-          //     // Aksi ketika Bahasa dipilih
-          //   },
-          // ),
-          // ListTile(
-          //   leading: Icon(Icons.privacy_tip),
-          //   title: Text('Privacy Policy'),
-          //   onTap: () {
-          //     // Aksi ketika Kebijakan Privasi dipilih
-          //   },
-          // ),
+          ),          
           ListTile(
             leading: Icon(Icons.exit_to_app),
             title: Text('Sign Out'),
@@ -122,15 +108,15 @@ class SettingsPage extends StatelessWidget {
               _logout(context);
             },
           ),
-          // ListTile(
-          //     leading: const Icon(Icons.dark_mode),
-          //     title: const Text('Dark Mode'),
-          //     trailing: Switch(
-          //       value: themeProvider.isDarkMode,
-          //       onChanged: (value) {
-          //         themeProvider.toggleDarkMode();
-          //       },
-          //     )),
+          ListTile(
+              leading: const Icon(Icons.dark_mode),
+              title: const Text('Dark Mode'),
+              trailing: Switch(
+                value: themeProvider.isDarkMode,
+                onChanged: (value) {
+                  themeProvider.toggleDarkMode();
+                },
+              )),
         ],
       ),
     );
