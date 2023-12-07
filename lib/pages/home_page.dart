@@ -113,9 +113,11 @@ class HomePage extends StatelessWidget {
             ],
           ),
           SizedBox(height: 8.0),
+          //Menggunakan widget Expanded untuk mengisi sebanyak mungkin ruang yang tersedia
           Expanded(
             child: Padding(
               padding: const EdgeInsets.all(8.0),
+              //Child dari Padding, berisi widget CoffeeList
               child: CoffeeList(),
             ),
           ),

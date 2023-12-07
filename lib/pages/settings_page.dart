@@ -109,14 +109,18 @@ class SettingsPage extends StatelessWidget {
             },
           ),
           ListTile(
+              //Icon di sebelah kiri ListTile
               leading: const Icon(Icons.dark_mode),
               title: const Text('Dark Mode'),
+              //Switch di sebelah kanan ListTile, menggantikan atau mengubah nilai tema
               trailing: Switch(
                 value: themeProvider.isDarkMode,
+                //Menangani perubahan nilai Switch dan memanggil fungsi toggleDarkMode
                 onChanged: (value) {
                   themeProvider.toggleDarkMode();
                 },
-              )),
+              )
+            ),
         ],
       ),
     );
